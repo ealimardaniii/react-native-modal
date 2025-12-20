@@ -130,7 +130,6 @@ export class ReactNativeModal extends React.Component<ModalProps, State> {
 
   isTransitioning = false;
   inSwipeClosingState = false;
-  // currentSwipingDirection: SwipeDirection | null = null;
   currentSwipingDirection: OrNull<Direction> = null;
 
   animationIn!: string;
@@ -182,7 +181,7 @@ export class ReactNativeModal extends React.Component<ModalProps, State> {
 
   static getDerivedStateFromProps(nextProps: ModalProps, state: State) {
     if (!state.isVisible && nextProps.isVisible) {
-      return {isVisible: true, showContent: true};
+      return {isVisible: true, showContent: false};
     }
     return null;
   }
@@ -513,6 +512,48 @@ export class ReactNativeModal extends React.Component<ModalProps, State> {
     }
   };
 
+  open = () => {
+    if (this.isTransitioning) return;
+    this.isTransitioning = true;
+
+    if (this.state.isSwipeable && this.state.pan) {
+      this.state.pan.setValue({x: 0, y: 0});
+    }
+    this.currentSwipingDirection = null;
+    this.inSwipeClosingState = false;
+
+    Animated.timing(this.backdropAnimatedOpacity, {
+      toValue: this.props.backdropOpacity ?? 0.7,
+      duration: this.props.backdropTransitionInTiming ?? 300,
+      useNativeDriver: true,
+    }).start();
+
+    if (!this.contentRef) return;
+
+    this.props.onModalWillShow?.();
+
+    if (this.interactionHandle == null) {
+      this.interactionHandle = InteractionManager.createInteractionHandle();
+    }
+
+    // ✅ فاز ۱ → showContent را true کن، اما انیمیشن را در فریم بعد شروع کن
+    if (!this.state.showContent) {
+      this.setState({showContent: true}, () => {
+        requestAnimationFrame(() => {
+          this.contentRef
+            .animate(this.animationIn, this.props.animationInTiming ?? 300)
+            .then(this.onOpenDone);
+        });
+      });
+      return;
+    }
+
+    // اگر از قبل true بود
+    this.contentRef
+      .animate(this.animationIn, this.props.animationInTiming ?? 300)
+      .then(this.onOpenDone);
+  };
+
   private onOpenDone = () => {
     this.isTransitioning = false;
 
@@ -523,43 +564,6 @@ export class ReactNativeModal extends React.Component<ModalProps, State> {
 
     if (!this.props.isVisible) this.close();
     else this.props.onModalShow?.();
-  };
-
-  open = () => {
-    if (this.isTransitioning) return;
-    this.isTransitioning = true;
-
-    Animated.timing(this.backdropAnimatedOpacity, {
-      toValue: this.props.backdropOpacity ?? 0.7,
-      duration: this.props.backdropTransitionInTiming ?? 300,
-      useNativeDriver: true,
-    }).start();
-
-    if (this.state.isSwipeable && this.state.pan) {
-      this.state.pan.setValue({x: 0, y: 0});
-    }
-    this.currentSwipingDirection = null;
-    this.inSwipeClosingState = false;
-
-    if (!this.contentRef) return;
-
-    this.props.onModalWillShow?.();
-    if (this.interactionHandle == null) {
-      this.interactionHandle = InteractionManager.createInteractionHandle();
-    }
-
-    if (!this.state.showContent) {
-      this.setState({showContent: true}, () => {
-        this.contentRef
-          .animate(this.animationIn, this.props.animationInTiming ?? 300)
-          .then(this.onOpenDone);
-      });
-      return;
-    }
-
-    this.contentRef
-      .animate(this.animationIn, this.props.animationInTiming ?? 300)
-      .then(this.onOpenDone);
   };
 
   close = () => {
@@ -673,10 +677,16 @@ export class ReactNativeModal extends React.Component<ModalProps, State> {
     } = this.props;
 
     const computedStyle = [
-      {margin: this.getDeviceWidth() * 0.05, transform: [{translateY: 0}]},
+      {margin: this.getDeviceWidth() * 0.05},
       styles.content,
       style,
     ];
+
+    const isHiddenPhase = this.state.isVisible && !this.state.showContent;
+
+    const initialHiddenStyle = isHiddenPhase
+      ? {transform: [{translateY: this.getDeviceHeight()}]}
+      : null;
 
     let panHandlers: any = {};
     let panPosition: any = {};
@@ -704,7 +714,7 @@ export class ReactNativeModal extends React.Component<ModalProps, State> {
       <animatable.View
         {...panHandlers}
         ref={(ref: any) => (this.contentRef = ref)}
-        style={[panPosition, computedStyle]}
+        style={[panPosition, computedStyle, initialHiddenStyle]}
         pointerEvents="box-none"
         useNativeDriver={useNativeDriver}
         {...otherProps}>

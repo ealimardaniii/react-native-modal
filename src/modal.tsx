@@ -182,7 +182,7 @@ export class ReactNativeModal extends React.Component<ModalProps, State> {
 
   static getDerivedStateFromProps(nextProps: ModalProps, state: State) {
     if (!state.isVisible && nextProps.isVisible) {
-      return {isVisible: true, showContent: true};
+      return {isVisible: true, showContent: false};
     }
     return null;
   }
@@ -602,11 +602,11 @@ export class ReactNativeModal extends React.Component<ModalProps, State> {
         });
     }
 
-    InteractionManager.runAfterInteractions(() => {
+    setTimeout(() => {
       if (this.state.isSwipeable && this.state.pan) {
         this.state.pan.setValue({x: 0, y: 0});
       }
-    });
+    }, 150);
   };
 
   makeBackdrop = () => {
@@ -666,10 +666,16 @@ export class ReactNativeModal extends React.Component<ModalProps, State> {
     } = this.props;
 
     const computedStyle = [
-      {margin: this.getDeviceWidth() * 0.05, transform: [{translateY: 0}]},
+      {margin: this.getDeviceWidth() * 0.05},
       styles.content,
       style,
     ];
+
+    const isHiddenPhase = this.state.isVisible && !this.state.showContent;
+
+    const initialHiddenStyle = isHiddenPhase
+      ? {transform: [{translateY: this.getDeviceHeight()}]} // برای slideInUp
+      : null;
 
     let panHandlers: any = {};
     let panPosition: any = {};
@@ -697,7 +703,7 @@ export class ReactNativeModal extends React.Component<ModalProps, State> {
       <animatable.View
         {...panHandlers}
         ref={(ref: any) => (this.contentRef = ref)}
-        style={[panPosition, computedStyle]}
+        style={[panPosition, computedStyle, initialHiddenStyle]}
         pointerEvents="box-none"
         useNativeDriver={useNativeDriver}
         {...otherProps}>

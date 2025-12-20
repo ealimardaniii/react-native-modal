@@ -174,7 +174,6 @@ export declare class ReactNativeModal extends React.Component<
   isDirectionIncluded: (direction: Direction) => boolean;
   isSwipeDirectionAllowed: ({dy, dx}: PanResponderGestureState) => boolean;
   handleDimensionsUpdate: () => void;
-  private onOpenDone;
   open: () => void;
   close: () => void;
   makeBackdrop: () => React.JSX.Element | null;

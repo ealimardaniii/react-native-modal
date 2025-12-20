@@ -527,10 +527,6 @@ export class ReactNativeModal extends React.Component {
       styles.content,
       style,
     ];
-    const isHiddenPhase = this.state.isVisible && !this.state.showContent;
-    const initialHiddenStyle = isHiddenPhase
-      ? {transform: [{translateY: this.getDeviceHeight()}]} // برای slideInUp
-      : null;
     let panHandlers = {};
     let panPosition = {};
     if (this.state.isSwipeable && this.panResponder && this.state.pan) {
@@ -552,7 +548,7 @@ export class ReactNativeModal extends React.Component {
       {
         ...panHandlers,
         ref: ref => (this.contentRef = ref),
-        style: [panPosition, computedStyle, initialHiddenStyle],
+        style: [panPosition, computedStyle],
         pointerEvents: 'box-none',
         useNativeDriver: useNativeDriver,
         ...otherProps,

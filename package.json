@@ -1,6 +1,6 @@
 {
-  "name": "react-native-modal",
-  "version": "14.3.0",
+  "name": "@ealimardani/react-native-modal",
+  "version": "14.3.1",
   "description": "An enhanced React Native modal",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -34,10 +34,10 @@
     "Anthony Cyrille"
   ],
   "license": "MIT",
-  "homepage": "https://github.com/react-native-modal/react-native-modal",
+  "homepage": "https://github.com/ealimardaniii/react-native-modal",
   "repository": {
     "type": "git",
-    "url": "https://github.com/react-native-modal/react-native-modal"
+    "url": "https://github.com/ealimardaniii/react-native-modal"
   },
   "dependencies": {
     "react-native-animatable": "1.4.0"
